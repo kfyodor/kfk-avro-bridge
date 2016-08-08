@@ -5,9 +5,11 @@
                           [adzerk/bootlaces "0.1.13" :scope "test"]
                           [adzerk/boot-test "1.1.1" :scope "test"]])
 
-(require '[adzerk.boot-test :as test])
+(require '[adzerk.boot-test :as test]
+         '[adzerk.bootlaces :refer :all])
 
 (def +version+ "0.1.0-SNAPSHOT")
+(bootlaces! +version+ :dont-modify-paths? true)
 
 (task-options!
  pom {:project 'io.thdr/kfk-avro-bridge
