@@ -12,7 +12,7 @@
 (bootlaces! +version+ :dont-modify-paths? true)
 
 (task-options!
- pom {:project 'io.thdr/kfk-avro-bridge
+ pom {:project 'io.thdr/kfk.avro-bridge
       :version +version+
       :description "Converting Clojure data structures to Avro-compatible Java classes back and forth."
       :url "https://github.com/konukhov/kfk-avro-bridge"

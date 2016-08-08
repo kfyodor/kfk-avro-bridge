@@ -1,7 +1,7 @@
-(ns thdr.avro-bridge.core-test
+(ns thdr.kfk.avro-bridge.core-test
   (:require [clojure.test :refer :all]
             [cheshire.core :as json]
-            [thdr.avro-bridge.core :refer [->java ->clj] :as core])
+            [thdr.kfk.avro-bridge.core :refer [->java ->clj] :as core])
   (:import [org.apache.avro Schema]))
 
 (defn- make-schema [m]

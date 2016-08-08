@@ -9,7 +9,7 @@ Note, that this library is not an Avro-wrapper for Clojure: for this purpose you
 
 Add this to your favorite build file (`project.clj` or `build.boot`)
 
-`[io.thdr/kfk-avro-bridge "0.1.0-SNAPSHOT"]`
+`[io.thdr/kfk.avro-bridge "0.1.0-SNAPSHOT"]`
 
 ## Usage
 
@@ -23,7 +23,7 @@ Add this to your favorite build file (`project.clj` or `build.boot`)
 
 ```clojure
 (ns test-avro
-  (:require [thdr.avro-bridge.core :as avro]
+  (:require [thdr.kfk.avro-bridge.core :as avro]
             [cheshire.core :as json]))
 
 (def schema (json/generate-string {:type "record",

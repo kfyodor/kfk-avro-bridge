@@ -1,4 +1,4 @@
-(ns thdr.avro-bridge.core
+(ns thdr.kfk.avro-bridge.core
   (:require [camel-snake-kebab.core :refer [->kebab-case ->snake_case]])
   (:import [java.nio ByteBuffer]
            [org.apache.avro.generic
