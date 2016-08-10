@@ -1,4 +1,4 @@
-(set-env! :source-paths #{"src"}
+(set-env! :resource-paths #{"src"}
           :dependencies '[[org.apache.avro/avro "1.8.1"]
                           [camel-snake-kebab "0.4.0"]
                           [cheshire "5.6.3"]
