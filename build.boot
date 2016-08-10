@@ -1,4 +1,5 @@
 (set-env! :source-paths #{"src"}
+          :repositories #(conj % '["confluent" "http://packages.confluent.io/maven/"])
           :dependencies '[[org.apache.avro/avro "1.8.1"]
                           [camel-snake-kebab "0.4.0"]
                           [io.confluent/kafka-avro-serializer "3.0.0"]
