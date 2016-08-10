@@ -29,7 +29,7 @@
   (Schema/parse json))
 
 (defn ->java
-  "Converts a Clojure data structure to Avro-compatible
+  "Converts a Clojure data structure to an Avro-compatible
    Java object. Avro `Schema` must be provided."
   [schema obj]
   (condp = (and (instance? Schema schema) (.getType schema))
@@ -124,7 +124,7 @@
 
 (defn ->clj
   "Parses deserialized Avro object into
-   Clojure data structures. Keys in records
+   a Clojure data structure. Keys in records
    and maps + enums will get keywordized and
    kebab-cased."
   [msg]

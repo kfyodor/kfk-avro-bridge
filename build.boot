@@ -1,6 +1,6 @@
 (set-env! :source-paths #{"src"}
-          :dependencies '[[org.apache.avro/avro "1.8.1" :scope "provided"]
-                          [camel-snake-kebab "0.4.0" :scope "provided"]
+          :dependencies '[[org.apache.avro/avro "1.8.1"]
+                          [camel-snake-kebab "0.4.0"]
                           [cheshire "5.6.3"]
                           [adzerk/bootlaces "0.1.13" :scope "test"]
                           [adzerk/boot-test "1.1.1" :scope "test"]])
