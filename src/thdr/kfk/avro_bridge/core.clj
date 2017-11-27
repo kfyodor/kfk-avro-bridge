@@ -33,7 +33,11 @@
 
 (defn ->java
   "Converts a Clojure data structure to an Avro-compatible
-   Java object. Avro `Schema` must be provided."
+   Java object. Avro `Schema` must be provided.
+
+  It accepts an optional as third argument a map with the options:
+
+  :java-field-fn function to apply to the Clojure's map keys when transforming them to Record fields and Map keys. Defaults to (comp name ->snake_case)"
   ([schema obj] (->java schema obj nil))
   ([schema obj {:keys [java-field-fn] :or {java-field-fn default-java-field-fn} :as opts}]
    (condp = (and (instance? Schema schema) (.getType schema))
@@ -128,9 +132,11 @@
 
 (defn ->clj
   "Parses deserialized Avro object into
-   a Clojure data structure. Keys in records
-   and maps + enums will get keywordized and
-   kebab-cased."
+   a Clojure data structure. Enums will get keywordized and
+   kebab-cased.
+
+   It accepts an optional as second argument a map with the options:
+   :clj-field-fn function to apply to the record's fields and map keys. Defaults to (comp keyword ->kebab-case str)"
   ([msg] (->clj msg nil))
   ([msg {:keys [clj-field-fn] :or {clj-field-fn default-clj-field-fn} :as opts}]
    (condp instance? msg
