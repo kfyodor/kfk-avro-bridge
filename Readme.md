@@ -15,28 +15,47 @@ Add this to your favorite build file (`project.clj` or `build.boot`)
 
 #### Notes: ####
 
-+ All keys in Clojure maps are keywordized and kebab-cased.
++ All keys in Clojure maps are keywordized and kebab-cased by default.
 + Enums are keywordized and kebab-cased
-+ When converting to Java objects, all keys and enums are snake_cased.
++ When converting to Java objects, all keys and enums are by default snake_cased.
 
 #### Example: ####
 
 ```clojure
 (ns test-avro
   (:require [thdr.kfk.avro-bridge.core :as avro]
+            [camel-snake-kebab.core :as cases]
             [cheshire.core :as json]))
 
 (def schema (json/generate-string {:type "record",
                                    :name "user",
 								   :fields [{:name "id" :type "int"}
-                                             :name "full_name" :type "string"]}))
+                                            {:name "full_name" :type "string"}]}))
 
-(def obj (avro/->java (parse-schema schema) 
+(def obj (avro/->java (avro/parse-schema schema)
                       {:id 1 :full-name "John Doe"})) 
 ;; => <GenericRecord ...>, which can be passed to KafkaAvroSerializer, for example
   
 (avro/->clj obj) 
 ;; => {:id 1 :full-name "John Doe"}
+
+;; You can override the default casing when converting to Java:
+
+(def schema (json/generate-string {:type "record",
+                                   :name "user",
+								   :fields [{:name "id" :type "int"}
+                                            {:name "fullName" :type "string"}]}))
+
+(def obj (avro/->java (avro/parse-schema schema)
+                      {:id 1 :full-name "John Doe"}
+                      {:java-field-fn (comp name cases/->camelCase)}))
+
+;; => #object[org.apache.avro.generic.GenericData$Record 0x13e22477 "{\"id\": 1, \"fullName\": \"John Doe\"}"]
+
+;; And also when transforming to Clojure:
+
+(avro/->clj obj {:clj-field-fn identity})
+;; => {"id" 1, "fullName" "John Doe"}
 ```
 
 ## Contributing
