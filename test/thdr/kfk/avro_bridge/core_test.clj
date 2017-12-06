@@ -26,8 +26,8 @@
   (test-roundtrip {:type "array" :items "int"} [1 2])
   (test-roundtrip {:type "array" :items "string"} ["1" "2"])
   (test-roundtrip {:type "map" :values "string"} {:a "1" :b "2"})
-  (test-roundtrip {:type "record"
-                   :name "Test"
+  (test-roundtrip {:type   "record"
+                   :name   "Test"
                    :fields [{:name "a" :type "string"}
                             {:name "b" :type "int"}]}
                   {:a "1" :b 2})
@@ -54,10 +54,10 @@
 
   (test-roundtrip {:type   "record"
                    :name   "CamelCaseInnerRecord"
-                   :fields [{:type   {:type "record"
-                                      :name   "InnerRecord"
-                                      :fields [{:name "aCamelCasedField" :type "string"}]}
-                             :name   "innerRecord"}]}
+                   :fields [{:type {:type   "record"
+                                    :name   "InnerRecord"
+                                    :fields [{:name "aCamelCasedField" :type "string"}]}
+                             :name "innerRecord"}]}
                   {:inner-record {:a-camel-cased-field "any value"}}
                   {:java-field-fn (comp name csk/->camelCase)})
 
@@ -71,3 +71,20 @@
   (test-roundtrip {:type "map" :values "string"}
                   {:a_snake "1" :b "2"}
                   {:clj-field-fn (comp keyword csk/->snake_case)}))
+
+(deftest optionally-ignore-unkown-fields
+
+  (let [schema (Schema/parse (make-schema {:type   "record"
+                                           :name   "DefaultSnakeCase"
+                                           :fields [{:name "just_this_one" :type "string"}]}))]
+    (is (thrown? Exception
+                 (->java schema
+                         {:just-this-one            "1"
+                          :but-this-is-an-extra-one "2"})))
+
+    (is (= {:just-this-one "1"}
+           (->clj
+             (->java schema
+                     {:just-this-one            "1"
+                      :but-this-is-an-extra-one "2"}
+                     {:ignore-unknown-field? true}))))))
