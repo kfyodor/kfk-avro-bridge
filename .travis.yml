@@ -1,0 +1,11 @@
+language: node_js
+sudo: required
+services:
+- docker
+cache:
+  directories:
+  - ${HOME}/.cache
+  - ${HOME}/.m2
+  - ${HOME}/google-cloud-sdk
+script:
+  - ./ci/build.sh
