@@ -12,6 +12,6 @@
                            :resource-paths ["dev/resources"]}
              :set-version {:plugins [[lein-set-version "0.4.1"]]}}
   :repositories [["releases" {:url           "https://clojars.org/repo"
-                              :sign-releases true
+                              :sign-releases false
                               :username      :env/clojars_username
                               :password      :env/clojars_password}]])
