@@ -13,5 +13,5 @@
              :set-version {:plugins [[lein-set-version "0.4.1"]]}}
   :repositories [["releases" {:url           "https://clojars.org/repo"
                               :sign-releases false
-                              :username      :env/clojars_username
+                              :username      "akvo"
                               :password      :env/clojars_password}]])
