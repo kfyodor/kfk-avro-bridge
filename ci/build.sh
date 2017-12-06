@@ -25,5 +25,4 @@ fi
 docker run \
     -v `pwd`:/app -v $HOME/.m2:/root/.m2 \
     -e CLOJARS_PASSWORD="${CLOJARS_PASSWORD}" -e TRAVIS_COMMIT="${TRAVIS_COMMIT}" -e TRAVIS_BUILD_NUMBER="${TRAVIS_BUILD_NUMBER}" \
-    -e CLOJARS_GPG_PASSWORD="${CLOJARS_GPG_PASSWORD}" \
      kfk-avro-bridge:develop /release.sh
