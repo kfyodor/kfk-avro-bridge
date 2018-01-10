@@ -37,9 +37,10 @@
 
   It accepts an optional as third argument a map with the options:
 
-  :java-field-fn function to apply to the Clojure's map keys when transforming them to Record fields and Map keys. Defaults to (comp name ->snake_case)"
+  :java-field-fn function to apply to the Clojure's map keys when transforming them to Record fields and Map keys. Defaults to (comp name ->snake_case)
+  :ignore-unknown-fields? default to false"
   ([schema obj] (->java schema obj nil))
-  ([schema obj {:keys [java-field-fn ignore-unknown-field?]
+  ([schema obj {:keys [java-field-fn ignore-unknown-fields?]
                 :or {java-field-fn default-java-field-fn
                      ignore-unknown-fields? false}
                 :as opts}]
@@ -126,7 +127,7 @@
          (let [k (-> k java-field-fn)
                s (some-> (.getField schema k)
                          (as-> f (.schema f)))]
-           (if (and (not s) ignore-unknown-field?)
+           (if (and (not s) ignore-unknown-fields?)
              record
              (doto record
                (.put k (->java (or s k) v opts))))))
