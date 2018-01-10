@@ -87,4 +87,4 @@
              (->java schema
                      {:just-this-one            "1"
                       :but-this-is-an-extra-one "2"}
-                     {:ignore-unknown-field? true}))))))
+                     {:ignore-unknown-fields? true}))))))
