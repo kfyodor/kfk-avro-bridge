@@ -1,4 +1,5 @@
 (ns thdr.kfk.avro-bridge.core
+  (:refer-clojure :exclude [bytes?])
   (:require [camel-snake-kebab.core :refer [->kebab-case ->snake_case]])
   (:import [java.nio ByteBuffer]
            [org.apache.avro.generic
@@ -18,10 +19,11 @@
     (-> x class .getComponentType (= Byte/TYPE))))
 
 (defn- throw-invalid-type
-  [^Schema schema obj]
-  (throw (Exception. (format "Value `%s` cannot be cast to `%s` schema"
-                             (str obj)
-                             (.toString schema)))))
+  [^Schema schema path obj]
+  (throw (Exception. (format "Value `%s` cannot be cast to `%s` schema at %s"
+                             obj
+                             schema
+                             path))))
 
 (defn parse-schema
   "A little helper for parsing schemas"
@@ -40,101 +42,109 @@
   :java-field-fn function to apply to the Clojure's map keys when transforming them to Record fields and Map keys. Defaults to (comp name ->snake_case)
   :ignore-unknown-fields? default to false"
   ([schema obj] (->java schema obj nil))
-  ([schema obj {:keys [java-field-fn ignore-unknown-fields?]
-                :or {java-field-fn default-java-field-fn
-                     ignore-unknown-fields? false}
-                :as opts}]
+  ([schema obj opts] (->java schema obj [] opts))
+  ([schema obj path {:keys [java-field-fn ignore-unknown-fields?]
+                     :or   {java-field-fn          default-java-field-fn
+                            ignore-unknown-fields? false}
+                     :as   opts}]
    (condp = (and (instance? Schema schema) (.getType schema))
      Schema$Type/NULL
      (if (nil? obj)
        nil
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/INT
      (if (and (integer? obj) (<= Integer/MIN_VALUE obj Integer/MAX_VALUE))
        (int obj)
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/LONG
      (if (and (integer? obj) (<= Long/MIN_VALUE obj Long/MAX_VALUE))
        (long obj)
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/FLOAT
      (if (float? obj)
        (float obj)
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/DOUBLE
      (if (float? obj)
        (double obj)
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/BOOLEAN
      (if (instance? Boolean obj)                            ;; boolean? added only in 1.9 :(
        obj
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/STRING
      (if (string? obj)
        obj
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/BYTES
      (if (bytes? obj)
        (doto (ByteBuffer/allocate (count obj))
          (.put obj)
          (.position 0))
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
-     Schema$Type/ARRAY                                      ;; TODO Exception for complex type
-     (let [f (fn [o] (->java (.getElementType schema) o opts))]
-       (GenericData$Array. schema (map f obj)))
+     Schema$Type/ARRAY
+     (if (sequential? obj)
+       (let [f (fn [index o] (->java (.getElementType schema) o (conj path index) opts))]
+         (GenericData$Array. schema (map-indexed f obj)))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/FIXED
      (if (and (bytes? obj) (= (count obj) (.getFixedSize schema)))
        (GenericData$Fixed. schema obj)
-       (throw-invalid-type schema obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/ENUM
      (let [enum (name obj)
            enums (into #{} (.getEnumSymbols schema))]
        (if (contains? enums enum)
          (GenericData$EnumSymbol. schema enum)
-         (throw-invalid-type schema enum)))
+         (throw-invalid-type schema path enum)))
 
-     Schema$Type/MAP                                        ;; TODO Exception for complex type
-     (zipmap (map java-field-fn (keys obj))
-             (map (fn [o] (->java (.getValueType schema) o opts))
-                  (vals obj)))
+     Schema$Type/MAP
+     (if (map? obj)
+       (into {}
+             (map (fn [[k v]]
+                    [(java-field-fn k)
+                     (->java (.getValueType schema) v (conj path k) opts)])
+                  obj))
+       (throw-invalid-type schema path obj))
 
      Schema$Type/UNION
      (let [[val matched]
            (reduce (fn [_ schema]
                      (try
-                       (reduced [(->java schema obj opts) true])
+                       (reduced [(->java schema obj path opts) true])
                        (catch Exception _
                          [nil false])))
                    [nil false]
                    (.getTypes schema))]
        (if matched
          val
-         (throw-invalid-type schema obj)))
+         (throw-invalid-type schema path obj)))
 
      Schema$Type/RECORD
-     (reduce-kv
-       (fn [record k v]
-         (let [k (-> k java-field-fn)
-               s (some-> (.getField schema k)
-                         (as-> f (.schema f)))]
-           (if (and (not s) ignore-unknown-fields?)
-             record
-             (doto record
-               (.put k (->java (or s k) v opts))))))
-       (GenericData$Record. schema)
-       obj)
+     (if (map? obj)
+       (reduce-kv
+         (fn [record k v]
+           (let [java-k (java-field-fn k)
+                 s (some-> (.getField schema java-k) .schema)]
+             (if (and (not s) ignore-unknown-fields?)
+               record
+               (doto record
+                 (.put java-k (->java (or s java-k) v (conj path k) opts))))))
+         (GenericData$Record. schema)
+         obj)
+       (throw-invalid-type schema path obj))
 
-     (throw (Exception. (format "Field `%s` is not in schema" schema))))))
+     (throw (Exception. (format "Field `%s` is not in schema %s" schema path))))))
 
 (defn ->clj
   "Parses deserialized Avro object into

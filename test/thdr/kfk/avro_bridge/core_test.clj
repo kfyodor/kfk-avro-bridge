@@ -88,3 +88,36 @@
                      {:just-this-one            "1"
                       :but-this-is-an-extra-one "2"}
                      {:ignore-unknown-fields? true}))))))
+
+(deftest exceptions-are-useful
+  (testing "Contains path to error"
+    (let [schema (Schema/parse (make-schema {:type   "record"
+                                             :name   "exceptional"
+                                             :fields [{:name "a"
+                                                       :type {:type  "array"
+                                                              :items {:type "map" :values "string"}}}]}))]
+      (is (thrown-with-msg?
+            Exception
+            #"\[:a 1 :c\]"
+            (->java schema
+                    {:a [{:b "ok"}
+                         {:b "ok" :c 1}]})))
+
+      (is (thrown-with-msg?
+            Exception
+            #"\[\]"
+            (->java schema
+                    "not a record")))
+
+      (is (thrown-with-msg?
+            Exception
+            #"\[:a\]"
+            (->java schema
+                    {:a "not a list"})))
+
+      (is (thrown-with-msg?
+            Exception
+            #"\[:a 1\]"
+            (->java schema
+                    {:a [{:b "ok"}
+                         "not a map"]}))))))
