@@ -1,0 +1,10 @@
+FROM clojure:lein-2.7.1-alpine
+MAINTAINER Akvo Foundation <devops@akvo.org>
+
+#RUN apk update && apk add gnupg
+
+WORKDIR /app
+COPY ci/release.sh /release.sh
+RUN chmod 777 /release.sh
+
+CMD /release.sh
